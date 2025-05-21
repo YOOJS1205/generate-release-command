@@ -1,0 +1,42 @@
+{
+  "name": "generate-release-command",
+  "version": "1.0.0",
+  "description": "Generate git revert/cherry-pick commands from Notion release notes",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "bin": {
+    "generate-release-command": "./dist/index.js"
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "prepare": "npm run build && chmod +x dist/index.js",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "git",
+    "release",
+    "notion",
+    "github",
+    "automation"
+  ],
+  "author": "Junsang Yoo",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/junsangyoo/generate-release-command"
+  },
+  "dependencies": {
+    "@notionhq/client": "^2.2.14",
+    "octokit": "^3.1.2",
+    "dotenv": "^16.3.1",
+    "commander": "^11.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "typescript": "^5.3.2"
+  }
+}
