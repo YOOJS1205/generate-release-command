@@ -39,21 +39,14 @@ generate-release-command "https://your-notion-page-url"
 
 ## 예시 출력
 
-```
-*Revert 명령어:*
-```
-
-git revert abc123 # PR 제목 1
-git revert def456 # PR 제목 2
+_Revert 명령어:_
 
 ```
-
-*Cherry-pick 명령어:*
+git revert abc123 def456
 ```
 
-git cherry-pick abc123 # PR 제목 1
-git cherry-pick def456 # PR 제목 2
+_Cherry-pick 명령어:_
 
 ```
-
+git cherry-pick abc123 def456
 ```
