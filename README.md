@@ -14,7 +14,7 @@ npm install -g generate-release-command
 
 ```
 NOTION_API_KEY=your-notion-api-key
-GITHUB_TOKEN=your-github-token
+GITHUB_KEY=your-github-token
 ```
 
 ## 사용 방법

@@ -17,8 +17,8 @@ program
     .argument("<url>", "Notion page URL")
     .option("-t, --type <type>", "Command type (revert or cherry-pick)", "both")
     .action(async (url, options) => {
-    const notionService = new notion_1.NotionService(process.env.NOTION_API_KEY || "");
-    const githubService = new github_1.GitHubService(process.env.GITHUB_TOKEN || "");
+    const notionService = new notion_1.NotionService(process.env.CLAP_NOTION_API_KEY || "");
+    const githubService = new github_1.GitHubService(process.env.GITHUB_KEY || "");
     try {
         // 1. Notion 페이지 ID 추출
         const pageId = notionService.extractPageId(url);
@@ -29,7 +29,7 @@ program
         // 2. PR 링크 추출
         const prLinks = await notionService.getPageContent(pageId);
         if (prLinks.length === 0) {
-            console.error("PR 링크를 찾을 수 없습니다.");
+            console.error("clap-web PR 링크를 찾을 수 없습니다.");
             process.exit(1);
         }
         // 3. 각 PR의 커밋 정보 가져오기
@@ -46,23 +46,16 @@ program
         // 4. 커밋 정렬
         const sortedCommits = githubService.sortCommitsByDate(commits);
         // 5. 명령어 생성
+        const commitShas = sortedCommits.map((commit) => commit.sha.slice(0, 7));
         if (options.type === "revert" || options.type === "both") {
-            const revertCommands = sortedCommits
-                .map((commit) => `git revert ${commit.sha} # ${commit.message}`)
-                .join("\n");
-            console.log("\n*Revert 명령어:*");
-            console.log("```");
-            console.log(revertCommands);
-            console.log("```");
+            const revertCommand = `git revert ${commitShas.join(" ")}`;
+            console.log("\nRevert 명령어:");
+            console.log(revertCommand);
         }
         if (options.type === "cherry-pick" || options.type === "both") {
-            const cherryPickCommands = sortedCommits
-                .map((commit) => `git cherry-pick ${commit.sha} # ${commit.message}`)
-                .join("\n");
-            console.log("\n*Cherry-pick 명령어:*");
-            console.log("```");
-            console.log(cherryPickCommands);
-            console.log("```");
+            const cherryPickCommand = `git cherry-pick ${commitShas.join(" ")}`;
+            console.log("\nCherry-pick 명령어:");
+            console.log(cherryPickCommand);
         }
     }
     catch (error) {

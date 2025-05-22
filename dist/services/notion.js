@@ -10,34 +10,69 @@ class NotionService {
         const matches = url.match(/([a-zA-Z0-9]{32})/);
         return matches ? matches[1] : null;
     }
-    async getPageContent(pageId) {
-        try {
-            const page = await this.client.pages.retrieve({ page_id: pageId });
-            const blocks = await this.client.blocks.children.list({
-                block_id: pageId,
-            });
-            const prLinks = [];
-            for (const block of blocks.results) {
-                if (this.isParagraphBlock(block)) {
-                    const text = block.paragraph.rich_text
-                        .map((t) => t.plain_text)
-                        .join("");
-                    const githubPrRegex = /https:\/\/github\.com\/[^\/]+\/[^\/]+\/pull\/\d+/g;
-                    const matches = text.match(githubPrRegex);
-                    if (matches) {
-                        prLinks.push(...matches);
+    async extractPrLinksFromBlocks(blocks) {
+        let prLinks = [];
+        const childBlockPromises = [];
+        for (const block of blocks) {
+            // 1. rich_text가 있는 블록에서 링크 추출
+            const richText = block.paragraph?.rich_text ||
+                block.to_do?.rich_text ||
+                block.bulleted_list_item?.rich_text ||
+                block.numbered_list_item?.rich_text ||
+                block.heading_1?.rich_text ||
+                block.heading_2?.rich_text ||
+                block.heading_3?.rich_text;
+            if (Array.isArray(richText)) {
+                for (const t of richText) {
+                    if (t.href &&
+                        t.href.startsWith("https://github.com/dwhale-dev/clap-web/")) {
+                        prLinks.push(t.href);
+                    }
+                    if (t.plain_text) {
+                        const regex = /https:\/\/github\.com\/dwhale-dev\/clap-web\/pull\/\d+/g;
+                        const matches = t.plain_text.match(regex);
+                        if (matches)
+                            prLinks.push(...matches);
                     }
                 }
             }
+            // 2. url 속성이 있는 블록(링크 미리보기 등)
+            if ("url" in block &&
+                typeof block.url === "string" &&
+                block.url.startsWith("https://github.com/dwhale-dev/clap-web/")) {
+                prLinks.push(block.url);
+            }
+            // 3. 하위 블록이 있으면 병렬로 탐색
+            if (block.has_children) {
+                const childPromise = this.client.blocks.children
+                    .list({ block_id: block.id })
+                    .then((childrenResp) => this.extractPrLinksFromBlocks(childrenResp.results));
+                childBlockPromises.push(childPromise);
+            }
+        }
+        // 모든 하위 블록 요청을 병렬로 처리
+        const childLinksArrays = await Promise.all(childBlockPromises);
+        for (const childLinks of childLinksArrays) {
+            prLinks = prLinks.concat(childLinks);
+        }
+        // 중복 제거
+        return Array.from(new Set(prLinks));
+    }
+    async getPageContent(pageId) {
+        try {
+            const blocks = await this.client.blocks.children.list({
+                block_id: pageId,
+            });
+            // 모든 블록에서 PR 링크 추출 (재귀)
+            const allLinks = await this.extractPrLinksFromBlocks(blocks.results);
+            // clap-web이 포함된 링크만 필터링 후 중복 제거
+            const prLinks = Array.from(new Set(allLinks.filter((link) => link.includes("https://github.com/dwhale-dev/clap-web/"))));
             return prLinks;
         }
         catch (error) {
             console.error("Notion 페이지 가져오기 실패:", error);
             throw error;
         }
-    }
-    isParagraphBlock(block) {
-        return ("type" in block && block.type === "paragraph" && "paragraph" in block);
     }
 }
 exports.NotionService = NotionService;
