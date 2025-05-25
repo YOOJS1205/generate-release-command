@@ -11,11 +11,11 @@ yarn add generate-release-command -D
 ## 설정
 
 `.env` 파일을 생성하고 다음 변수들을 설정합니다:
-환경변수 키 값들은 슬랙 채널에 따로 공유드릴게요!
 
 ```
 NOTION_API_KEY=your-notion-api-key
 GITHUB_KEY=your-github-token
+GITHUB_PR_LINK=your-github-pr-link
 ```
 
 ## 사용 방법
