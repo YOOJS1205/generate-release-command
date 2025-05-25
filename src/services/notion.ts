@@ -29,15 +29,13 @@ export class NotionService {
 
       if (Array.isArray(richText)) {
         for (const t of richText) {
-          if (
-            t.href &&
-            t.href.startsWith("https://github.com/dwhale-dev/clap-web/")
-          ) {
+          if (t.href && t.href.startsWith(process.env.GITHUB_PR_LINK!)) {
             prLinks.push(t.href);
           }
           if (t.plain_text) {
-            const regex =
-              /https:\/\/github\.com\/dwhale-dev\/clap-web\/pull\/\d+/g;
+            // GitHub URL을 환경 변수에서 가져와서 정규 표현식 생성
+            const githubUrl = process.env.GITHUB_PR_LINK!.replace(/\/$/, ""); // 마지막 슬래시 제거
+            const regex = new RegExp(`${githubUrl}/pull/\\d+`, "g");
             const matches = t.plain_text.match(regex);
             if (matches) prLinks.push(...matches);
           }
@@ -48,7 +46,7 @@ export class NotionService {
       if (
         "url" in block &&
         typeof block.url === "string" &&
-        block.url.startsWith("https://github.com/dwhale-dev/clap-web/")
+        block.url.startsWith(process.env.GITHUB_PR_LINK!)
       ) {
         prLinks.push(block.url);
       }
@@ -81,12 +79,9 @@ export class NotionService {
       });
       // 모든 블록에서 PR 링크 추출 (재귀)
       const allLinks = await this.extractPrLinksFromBlocks(blocks.results);
-      // clap-web이 포함된 링크만 필터링 후 중복 제거
       const prLinks = Array.from(
         new Set(
-          allLinks.filter((link) =>
-            link.includes("https://github.com/dwhale-dev/clap-web/")
-          )
+          allLinks.filter((link) => link.includes(process.env.GITHUB_PR_LINK!))
         )
       );
       return prLinks;

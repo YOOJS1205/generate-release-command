@@ -17,7 +17,7 @@ program
     .argument("<url>", "Notion page URL")
     .option("-t, --type <type>", "Command type (revert or cherry-pick)", "both")
     .action(async (url, options) => {
-    const notionService = new notion_1.NotionService(process.env.CLAP_NOTION_API_KEY || "");
+    const notionService = new notion_1.NotionService(process.env.NOTION_API_KEY || "");
     const githubService = new github_1.GitHubService(process.env.GITHUB_KEY || "");
     try {
         // 1. Notion 페이지 ID 추출
@@ -29,7 +29,7 @@ program
         // 2. PR 링크 추출
         const prLinks = await notionService.getPageContent(pageId);
         if (prLinks.length === 0) {
-            console.error("clap-web PR 링크를 찾을 수 없습니다.");
+            console.error("PR 링크를 찾을 수 없습니다.");
             process.exit(1);
         }
         // 3. 각 PR의 커밋 정보 가져오기

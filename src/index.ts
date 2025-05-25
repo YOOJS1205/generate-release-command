@@ -18,9 +18,7 @@ program
   .argument("<url>", "Notion page URL")
   .option("-t, --type <type>", "Command type (revert or cherry-pick)", "both")
   .action(async (url: string, options: { type: string }) => {
-    const notionService = new NotionService(
-      process.env.CLAP_NOTION_API_KEY || ""
-    );
+    const notionService = new NotionService(process.env.NOTION_API_KEY || "");
     const githubService = new GitHubService(process.env.GITHUB_KEY || "");
 
     try {
@@ -35,7 +33,7 @@ program
       const prLinks = await notionService.getPageContent(pageId);
 
       if (prLinks.length === 0) {
-        console.error("clap-web PR 링크를 찾을 수 없습니다.");
+        console.error("PR 링크를 찾을 수 없습니다.");
         process.exit(1);
       }
 
