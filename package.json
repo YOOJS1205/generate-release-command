@@ -1,6 +1,6 @@
 {
   "name": "generate-release-command",
-  "version": "1.0.0",
+  "version": "1.0.2",
   "description": "Generate git revert/cherry-pick commands from Notion release notes",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -27,7 +27,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/junsangyoo/generate-release-command"
+    "url": "https://github.com/YOOJS1205/generate-release-command"
   },
   "dependencies": {
     "@notionhq/client": "^2.2.14",
