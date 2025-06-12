@@ -43,17 +43,19 @@ program
                 }
             }
         }
-        // 4. 커밋 정렬
-        const sortedCommits = githubService.sortCommitsByDate(commits);
-        // 5. 명령어 생성
-        const commitShas = sortedCommits.map((commit) => commit.sha.slice(0, 7));
+        const commitsForRevert = githubService.sortCommitsByDateDesc(commits);
+        const commitsForCherryPick = githubService.sortCommitsByDate(commits);
         if (options.type === "revert" || options.type === "both") {
-            const revertCommand = `git revert ${commitShas.join(" ")}`;
+            const revertCommand = `git revert ${commitsForRevert
+                .map((commit) => commit.sha.slice(0, 7))
+                .join(" ")}`;
             console.log("\nRevert 명령어:");
             console.log(revertCommand);
         }
         if (options.type === "cherry-pick" || options.type === "both") {
-            const cherryPickCommand = `git cherry-pick ${commitShas.join(" ")}`;
+            const cherryPickCommand = `git cherry-pick ${commitsForCherryPick
+                .map((commit) => commit.sha.slice(0, 7))
+                .join(" ")}`;
             console.log("\nCherry-pick 명령어:");
             console.log(cherryPickCommand);
         }

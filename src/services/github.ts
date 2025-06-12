@@ -58,8 +58,14 @@ export class GitHubService {
   }
 
   sortCommitsByDate(commits: Commit[]): Commit[] {
-    return commits.sort(
+    return [...commits].sort(
       (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
+    );
+  }
+
+  sortCommitsByDateDesc(commits: Commit[]): Commit[] {
+    return [...commits].sort(
+      (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
     );
   }
 }
