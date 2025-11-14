@@ -12,6 +12,36 @@ export class NotionService {
     return matches ? matches[1] : null;
   }
 
+  /**
+   * 페이지네이션을 처리하여 모든 하위 블록을 가져옵니다
+   */
+  async getAllChildBlocks(blockId: string): Promise<any[]> {
+    const allBlocks: any[] = [];
+    let cursor: string | undefined = undefined;
+    let hasMore = true;
+    let pageCount = 0;
+
+    while (hasMore) {
+      const response = await this.client.blocks.children.list({
+        block_id: blockId,
+        start_cursor: cursor,
+        page_size: 100, // 최대 100개씩 가져오기
+      });
+
+      allBlocks.push(...response.results);
+      hasMore = response.has_more;
+      cursor = response.next_cursor || undefined;
+      pageCount++;
+    }
+
+    // 디버깅: 페이지네이션이 발생했는지 확인
+    if (pageCount > 1) {
+      console.log(`  [디버그] 블록 ${blockId.substring(0, 8)}...: ${pageCount}페이지, 총 ${allBlocks.length}개 블록`);
+    }
+
+    return allBlocks;
+  }
+
   async extractPrLinksFromBlocks(blocks: any[]): Promise<string[]> {
     let prLinks: string[] = [];
     const childBlockPromises: Promise<string[]>[] = [];
@@ -51,13 +81,11 @@ export class NotionService {
         prLinks.push(block.url);
       }
 
-      // 3. 하위 블록이 있으면 병렬로 탐색
+      // 3. 하위 블록이 있으면 병렬로 탐색 (페이지네이션 처리)
       if (block.has_children) {
-        const childPromise = this.client.blocks.children
-          .list({ block_id: block.id })
-          .then((childrenResp) =>
-            this.extractPrLinksFromBlocks(childrenResp.results)
-          );
+        const childPromise = this.getAllChildBlocks(block.id).then(
+          (childBlocks) => this.extractPrLinksFromBlocks(childBlocks)
+        );
         childBlockPromises.push(childPromise);
       }
     }
@@ -74,11 +102,10 @@ export class NotionService {
 
   async getPageContent(pageId: string): Promise<string[]> {
     try {
-      const blocks = await this.client.blocks.children.list({
-        block_id: pageId,
-      });
+      // 페이지네이션을 처리하여 모든 블록 가져오기
+      const allBlocks = await this.getAllChildBlocks(pageId);
       // 모든 블록에서 PR 링크 추출 (재귀)
-      const allLinks = await this.extractPrLinksFromBlocks(blocks.results);
+      const allLinks = await this.extractPrLinksFromBlocks(allBlocks);
       const prLinks = Array.from(
         new Set(
           allLinks.filter((link) => link.includes(process.env.GITHUB_PR_LINK!))

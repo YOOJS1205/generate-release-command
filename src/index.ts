@@ -39,18 +39,42 @@ program
 
       // 3. 각 PR의 커밋 정보 가져오기
       const commits = [];
+      let failedPrs: string[] = [];
+      let invalidPrUrls: string[] = [];
+
+      console.log(`총 ${prLinks.length}개의 PR 링크를 찾았습니다.`);
+
       for (const prUrl of prLinks) {
         const prInfo = githubService.extractPrInfo(prUrl);
-        if (prInfo) {
-          const commit = await githubService.getSquashMergeCommit(
-            prInfo.owner,
-            prInfo.repo,
-            prInfo.prNumber
-          );
-          if (commit) {
-            commits.push(commit);
-          }
+        if (!prInfo) {
+          console.warn(`잘못된 PR URL 형식: ${prUrl}`);
+          invalidPrUrls.push(prUrl);
+          continue;
         }
+
+        const commit = await githubService.getSquashMergeCommit(
+          prInfo.owner,
+          prInfo.repo,
+          prInfo.prNumber
+        );
+        if (commit) {
+          commits.push(commit);
+        } else {
+          failedPrs.push(prUrl);
+        }
+      }
+
+      // 통계 정보 출력
+      console.log(`\n처리 결과:`);
+      console.log(`  - 성공한 커밋: ${commits.length}개`);
+      console.log(`  - 커밋을 찾지 못한 PR: ${failedPrs.length}개`);
+      if (failedPrs.length > 0) {
+        console.log(`  - 실패한 PR 목록:`);
+        failedPrs.forEach((url) => console.log(`    ${url}`));
+      }
+      if (invalidPrUrls.length > 0) {
+        console.log(`  - 잘못된 URL 형식: ${invalidPrUrls.length}개`);
+        invalidPrUrls.forEach((url) => console.log(`    ${url}`));
       }
 
       const commitsForRevert = githubService.sortCommitsByDateDesc(commits);
