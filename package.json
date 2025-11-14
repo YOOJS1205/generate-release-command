@@ -1,6 +1,6 @@
 {
   "name": "generate-release-command",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "description": "Generate git revert/cherry-pick commands from Notion release notes",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -9,7 +9,8 @@
   },
   "files": [
     "dist",
-    "README.md"
+    "README.md",
+    "CHANGELOG.md"
   ],
   "scripts": {
     "build": "tsc",
